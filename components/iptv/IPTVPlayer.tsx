@@ -16,12 +16,12 @@ const HLS_LIVE_CONFIG: Partial<Hls['config']> = {
   lowLatencyMode: true,
   liveDurationInfinity: true,
   manifestLoadingTimeOut: 10000,
-  manifestLoadingMaxRetry: 2,
+  manifestLoadingMaxRetry: 3,
   levelLoadingTimeOut: 10000,
-  fragLoadingTimeOut: 15000,
+  fragLoadingTimeOut: 20000,
 };
 
-const LOADING_TIMEOUT_MS = 20000;
+const LOADING_TIMEOUT_MS = 30000;
 
 interface IPTVPlayerProps {
   channel: M3UChannel;
@@ -30,8 +30,12 @@ interface IPTVPlayerProps {
   onChannelChange: (channel: M3UChannel) => void;
 }
 
-function getProxiedUrl(url: string): string {
-  return `/api/iptv/stream?url=${encodeURIComponent(url)}`;
+function getProxiedUrl(url: string, ua?: string, referer?: string): string {
+  let proxyUrl = `/api/iptv/stream?`;
+  if (ua) proxyUrl += `ua=${encodeURIComponent(ua)}&`;
+  if (referer) proxyUrl += `referer=${encodeURIComponent(referer)}&`;
+  proxyUrl += `url=${encodeURIComponent(url)}`;
+  return proxyUrl;
 }
 
 function formatTime(seconds: number): string {
@@ -161,7 +165,7 @@ export function IPTVPlayer({ channel, onClose, channels, onChannelChange }: IPTV
     video.removeAttribute('src');
     video.load();
 
-    const proxiedUrl = getProxiedUrl(url);
+    const proxiedUrl = getProxiedUrl(url, channel.httpUserAgent, channel.httpReferrer);
 
     // Global loading timeout
     let loadingResolved = false;
@@ -309,7 +313,7 @@ export function IPTVPlayer({ channel, onClose, channels, onChannelChange }: IPTV
         }, { once: true });
       }, { once: true });
     }
-  }, []);
+  }, [channel.httpUserAgent, channel.httpReferrer]);
 
   // Load on channel/route change
   useEffect(() => {

@@ -161,6 +161,7 @@ function PlayerContent() {
                     sourceName: match.sourceDisplayName || getSourceName(match.source),
                     latency: match.latency,
                     pic: match.vod_pic,
+                    typeName: match.type_name,
                   });
                   // Update state incrementally
                   setDiscoveredSources([...found]);
